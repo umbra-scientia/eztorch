@@ -511,7 +511,10 @@ class UnicornCore(nn.Module):
 		x = self.conv_gate(x, h)
 
 		h = self.mem_kernel(UnitVariance(x))
-		h0, h1, h2, h3 = torch.split(h, 4, dim=-1)
+		h0 = h[:,:,self.res*0:self.res*1]
+		h1 = h[:,:,self.res*1:self.res*2]
+		h2 = h[:,:,self.res*2:self.res*3]
+		h3 = h[:,:,self.res*3:self.res*4]
 		h = h0*self.mem_shaper(h2) + h1*self.mem_shaper(h3)
 		x = self.mem_gate(x, h)
 		return x
