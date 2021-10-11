@@ -1,6 +1,7 @@
 import io
 import os
 import sys
+import time
 import math
 import json
 import torch
@@ -245,7 +246,6 @@ def pile_readline():
 		if not os.path.exists(pile_path):
 			os.mkdir(pile_path)
 		if not os.path.exists(chunk_fn):
-			import time
 			import urllib.request
 			def download_callback(count, block_size, total_size):
 				global start_time
