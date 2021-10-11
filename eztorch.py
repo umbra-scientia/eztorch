@@ -524,8 +524,8 @@ class UnicornCore(nn.Module):
 			h = h0*self.mem_shaper(h2) + h1*self.mem_shaper(h3)
 		elif self.mem_type == 'BiGELU':
 			h = h0 + h1*(self.mem_shaper(h2) - h1*self.mem_shaper(h3))
-		elif self.mem_type == 'Poly4':
-			h = h0 + h1*h1 + h2*h2*h2 + h3*h3*h3*h3
+		elif self.mem_type == 'Poly3':
+			h = (h0 + h1*h1 - h2*h2 + h3*h3*h3) / 4
 		elif self.mem_type == '4xReluSq':
 			h = h0*torch.relu(h0) + h1*torch.relu(h1) + h2*torch.relu(h2) + h3*torch.relu(h3)
 		elif self.mem_type == '2xSoftPow':
