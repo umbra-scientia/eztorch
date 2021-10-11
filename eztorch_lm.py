@@ -17,7 +17,7 @@ filename = None
 res = 512
 depth = 6
 capacity = 2
-steps = 0
+steps = 10000
 tokenizer = None
 wandb_entity = None
 wandb_project = None
@@ -33,7 +33,8 @@ device_batch_size_override = None
 stochastic_beams = 1
 fixed_beams = 0
 top_p = 0.9
-output_length = 64
+output_length = 0
+save_every = 0
 
 i = 1
 while i < len(sys.argv):
@@ -61,13 +62,13 @@ while i < len(sys.argv):
 	elif sys.argv[i] == "--output-length":
 		i += 1
 		output_length = int(sys.argv[i])
+	elif sys.argv[i] == "--save-every":
+		i += 1
+		save_every = float(sys.argv[i])
 	else:
 		print("Unknown command line option: %s" % sys.argv[i])
 		exit()
 	i += 1
-
-if (steps == 0) and (prompt != ""):
-	steps = 10000
 
 if config_file == None:
 	print("training usage:\n$ python eztorch_lm.py --config <filename.json>\n\t--steps %d\n\t--device-batch-size %d\n"%(steps, device_batch_size))
@@ -291,6 +292,7 @@ if steps:
 			"Tokens Per Step": seq_length*device_batch_size*batch_count,
 		})
 
+last_save = time.time()
 try:
 	should_save = False
 	for i in range(steps*batch_count):
@@ -326,6 +328,13 @@ try:
 
 		if model.backprop(loss) >= batch_count:
 			model.optimize()
+			if filename and (save_every > 0):
+				now = time.time()
+				if (now-last_save) >= save_every:
+					last_save = now
+					print("Saving...")
+					model.save(filename)
+
 except KeyboardInterrupt:
 	print("Interrupted")
 
@@ -333,4 +342,5 @@ if filename and should_save:
 	print("Saving...")
 	model.save(filename)
 
-model.generate(prompt, length=output_length, top_p=top_p, fixed_beams=fixed_beams, stochastic_beams=stochastic_beams, live=True)
+if output_length:
+	model.generate(prompt, length=output_length, top_p=top_p, fixed_beams=fixed_beams, stochastic_beams=stochastic_beams, live=True)
