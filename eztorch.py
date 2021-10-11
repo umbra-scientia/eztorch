@@ -527,7 +527,7 @@ class UnicornCore(nn.Module):
 		elif self.mem_type == 'Poly3':
 			h = (h0 + h1*h1 - h2*h2 + h3*h3*h3) / 4
 		elif self.mem_type == '4xReluSq':
-			h = h0*torch.relu(h0) + h1*torch.relu(h1) + h2*torch.relu(h2) + h3*torch.relu(h3)
+			h = (h0*torch.relu(h0) + h1*torch.relu(h1) + h2*torch.relu(h2) + h3*torch.relu(h3)) / 2
 		elif self.mem_type == '2xSoftPow':
 			h = torch.exp(torch.log(Positive(h0)) * F.softplus(h1)) - torch.exp(torch.log(Positive(h2)) * F.softplus(h3))
 		elif self.mem_type == 'DynamicSoftPow':
