@@ -332,9 +332,10 @@ class Model(nn.Module):
 	def progress_bar(self, cur_value, max_value, title=None, losses=None):
 		w = 80
 		try:
-			w = os.get_terminal_size().columns
+			term_w = os.get_terminal_size().columns
+			if term_w: w = term_w
 		except:
-			w = 80
+			pass
 		if title == None:
 			lhs = "Step %d [" % (self.step)
 		else:
