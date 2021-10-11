@@ -36,6 +36,7 @@ fixed_beams = 0
 top_p = 0.9
 output_length = 0
 save_every = 0
+experimental = None
 
 i = 1
 while i < len(sys.argv):
@@ -97,6 +98,8 @@ with open(config_file, "rb") as fp:
 		wandb_project = cfg["wandb_project"]
 	if "wandb_name" in cfg:
 		wandb_name = cfg["wandb_name"]
+	if "experimental" in cfg:
+		experimental = cfg["experimental"]
 
 if device_batch_size_override:
 	device_batch_size = device_batch_size_override
@@ -222,7 +225,7 @@ class UnicornLM(ez.Model):
 			live(self.detokenize(beams[0]['t']), beams[0]['p'])
 		return beams[0]['t']
 
-model = UnicornLM(ez.Unicorn(res, depth, capacity, device=device), tokenizer=tokenizer)
+model = UnicornLM(ez.Unicorn(res, depth, capacity, experimental=experimental, device=device), tokenizer=tokenizer)
 print("model params: %.02fM"%(model.param_count() / 1000000))
 model.train()
 model.learn_rate = learn_rate

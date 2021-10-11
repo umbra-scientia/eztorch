@@ -480,7 +480,7 @@ class UnicornGate(nn.Module):
 		return torch.sum(z*h, dim=-2)
 
 class UnicornCore(nn.Module):
-	def __init__(self, res, capacity, kernel=[1], attention=True, passthru=1/2, device='cpu'):
+	def __init__(self, res, capacity, kernel=[1], attention=True, passthru=1/2, experimental=None, device='cpu'):
 		super().__init__()
 		self.res = res
 		self.device = device
@@ -500,6 +500,9 @@ class UnicornCore(nn.Module):
 		self.mem_kernel = Matrix(self.res, self.res*4, bias=True, device=self.device)
 		self.mem_gate = UnicornGate(self.res, self.res, self.capacity, passthru=passthru2, device=self.device)
 		self.mem_shaper = F.gelu
+		self.mem_type = "2xGEGLU"
+		if (experimental != None) and ("ffn" in experimental):
+			self.mem_type = experimental["ffn"]
 
 	def forward(self, x, y=None, mask=None):
 		ux = UnitVariance(x)
@@ -516,12 +519,23 @@ class UnicornCore(nn.Module):
 		h1 = h[:,:,self.res*1:self.res*2]
 		h2 = h[:,:,self.res*2:self.res*3]
 		h3 = h[:,:,self.res*3:self.res*4]
-		h = h0*self.mem_shaper(h2) + h1*self.mem_shaper(h3)
+		if self.mem_type == '2xGEGLU':
+			h = h0*self.mem_shaper(h2) + h1*self.mem_shaper(h3)
+		elif self.mem_type == 'BiGELU':
+			h = h0 + h1*(self.mem_shaper(h2) - h1*self.mem_shaper(h3))
+		elif self.mem_type == 'Poly4':
+			h = h0 + h1*h1 + h2*h2*h2 + h3*h3*h3*h3
+		elif self.mem_type == '4xReluSq':
+			h = h0*torch.relu(h0) + h1*torch.relu(h1) + h2*torch.relu(h2) + h3*torch.relu(h3)
+		elif self.mem_type == '2xSoftPow':
+			h = torch.exp(torch.log(Positive(h0)) * F.softplus(h1)) + torch.exp(torch.log(Positive(h2)) * F.softplus(h3))
+		elif self.mem_type == 'DynamicSoftPow':
+			h = h0 + torch.exp(torch.log(Positive(h1)) * F.softplus(h2, h3))
 		x = self.mem_gate(x, h)
 		return x
 
 class Unicorn(nn.Module):
-	def __init__(self, res, depth, capacity=4, kernel=[1, 2, 3, [1, 4], [5, 8], [9, 12], [1, 16], [1, 32]], attention=1/4, passthru=1/2, device='cpu'):
+	def __init__(self, res, depth, capacity=4, kernel=[1, 2, 3, [1, 4], [5, 8], [9, 12], [1, 16], [1, 32]], attention=1/4, passthru=1/2, experimental=None, device='cpu'):
 		super().__init__()
 		self.res = res
 		self.depth = depth
@@ -532,7 +546,7 @@ class Unicorn(nn.Module):
 		self.mask_cache = None
 		j = depth - math.ceil(depth * attention)
 		p = math.pow(passthru, 1/max(depth, 1))
-		self.layers = nn.ModuleList([UnicornCore(res, capacity, kernel, (i>=j), passthru=p, device=self.device) for i in range(depth)])
+		self.layers = nn.ModuleList([UnicornCore(res, capacity, kernel, (i>=j), passthru=p, experimental=experimental, device=self.device) for i in range(depth)])
 
 	def forward(self, x, y=None, mask=True):
 		if mask == True:
