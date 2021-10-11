@@ -231,7 +231,7 @@ if filename: model.load(filename)
 
 pile = None
 pile_chunk = 0
-def pile_readline(retries=3):
+def pile_readline():
 	global pile
 	global pile_path
 	global pile_chunk
@@ -246,25 +246,24 @@ def pile_readline(retries=3):
 		if not os.path.exists(chunk_fn):
 			import time
 			import urllib.request
-			for i in range(retries):
-				def download_callback(count, block_size, total_size):
-					global start_time
-					if count == 0:
-						start_time = time.time()
-						return
-					duration = time.time() - start_time
-					progress_size = round(count * block_size)
-					speed = round(progress_size / (1024 * duration))
-					percent = min(round(count * block_size * 100 / total_size), 100)
-					sys.stdout.write("\rDownloading '%s' (%d%%, %d MB, %d KB/s, %ds elapsed)" % (fn, percent, progress_size / (1024*1024), speed, duration))
-					sys.stdout.flush()
-				try:
-					os.makedirs(pile_path, exist_ok=True)
-					chunk_url = pile_url + fn
-					urllib.request.urlretrieve(chunk_url, chunk_fn, download_callback)
-				except:
-					print("\nDownload failed. (retry %d/%d)"%(i+1, retries))
-					continue
+			def download_callback(count, block_size, total_size):
+				global start_time
+				if count == 0:
+					start_time = time.time()
+					return
+				duration = time.time() - start_time
+				progress_size = round(count * block_size)
+				speed = round(progress_size / (1024 * duration))
+				percent = min(round(count * block_size * 100 / total_size), 100)
+				sys.stdout.write("\rDownloading '%s' (%d%%, %d MB, %d KB/s, %ds elapsed)" % (fn, percent, progress_size / (1024*1024), speed, duration))
+				sys.stdout.flush()
+			try:
+				os.makedirs(pile_path, exist_ok=True)
+				chunk_url = pile_url + fn
+				urllib.request.urlretrieve(chunk_url, chunk_fn, download_callback)
+			except:
+				print("\nDownload failed.")
+				return False
 		fp = None
 		try:
 			fp = open(chunk_fn, 'rb')

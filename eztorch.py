@@ -330,7 +330,7 @@ class Model(nn.Module):
 		self.step += 1
 
 	def progress_bar(self, cur_value, max_value, title=None, losses=None):
-		w = 0
+		w = 80
 		try:
 			w = os.get_terminal_size().columns
 		except:
