@@ -503,6 +503,7 @@ class UnicornCore(nn.Module):
 		self.mem_type = "2xGEGLU"
 		if (experimental != None) and ("ffn" in experimental):
 			self.mem_type = experimental["ffn"]
+			print("Experimental Memory Type: %s" % self.mem_type)
 
 	def forward(self, x, y=None, mask=None):
 		ux = UnitVariance(x)
