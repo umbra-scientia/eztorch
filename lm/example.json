@@ -1,0 +1,16 @@
+{
+	"res": 512,
+	"depth": 6,
+	"capacity": 2,
+	"steps": 10000,
+	"tokenizer": "lm/pile32K.yttm",
+	"wandb_entity": null,
+	"wandb_project": null,
+	"wandb_name": null,
+	"seq_length": 1024,
+	"batch_size": 256,
+	"learn_rate": 0.0005,
+	"momentum": 0.8,
+	"weight_decay": 0.01,
+	"lr_decay": 0.001
+}
