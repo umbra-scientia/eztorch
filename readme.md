@@ -54,4 +54,24 @@ There are also some modern deep learning building blocks and other cool little t
   - `eztorch.Model.optimize(aux_metrics={})` Optimize parameters using stored gradients, and update dashboard.
   - `eztorch.Model.progress_bar(cur_value, max_value, title=None, losses=None)` Pretty-prints a progress bar.
   - `eztorch.Model.param_count()` Returns the total number of learnable parameters.
-  - `eztorch.Model.elapsed_time()` Returns the total number of seconds the model has spent loaded into the memory of processes that eventually save the model. This helps when  time requirements from research and tuning done on preemptible instances.
+  - `eztorch.Model.elapsed_time()` Returns the total number of seconds the model has spent loaded into the memory of processes that eventually save the model. This helps when estimating non-preemptible time requirements from research and tuning done on preemptible instances.
+
+### Bonus: eztorch_lm.py
+Language modeling is a natural fit for the Unicorn architecture. The provided script can train a model on The Pile. There is an example configuration JSON file in `lm/example.json`
+
+Training usage:
+```sh
+$ python eztorch_lm.py --config <filename.json>
+	--steps 10000
+	--device-batch-size 16
+```
+
+Generator usage:
+```sh
+$ python eztorch_lm.py --config <filename.json>
+	--prompt "In a shocking finding, scientists discovered a herd of unicorns living in a remote, previously unexplored valley, in the Andes Mountains. Even more surprising to the researchers was the fact that the unicorns spoke perfect English."
+	--beam-search 1
+	--stochastic-beam-search 4
+	--top-p 0.95
+	--output-length 256
+```
